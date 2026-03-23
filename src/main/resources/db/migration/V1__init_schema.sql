@@ -1,5 +1,5 @@
 CREATE TABLE users (
-    id BINARY(16) NOT NULL,
+    id VARCHAR(36) NOT NULL,
     login VARCHAR(64) NOT NULL,
     password VARCHAR(255) NOT NULL,
     created_at TIMESTAMP NOT NULL,
@@ -8,8 +8,8 @@ CREATE TABLE users (
 ) ENGINE=InnoDB;
 
 CREATE TABLE items (
-    id BINARY(16) NOT NULL,
-    owner_id BINARY(16) NOT NULL,
+    id VARCHAR(36) NOT NULL,
+    owner_id VARCHAR(36) NOT NULL,
     title VARCHAR(255) NOT NULL,
     content TEXT,
     version INTEGER NOT NULL,
@@ -21,9 +21,9 @@ CREATE TABLE items (
 ) ENGINE=InnoDB;
 
 CREATE TABLE item_permissions (
-    id BINARY(16) NOT NULL,
-    item_id BINARY(16) NOT NULL,
-    user_id BINARY(16) NOT NULL,
+    id VARCHAR(36) NOT NULL,
+    item_id VARCHAR(36) NOT NULL,
+    user_id VARCHAR(36) NOT NULL,
     role ENUM('VIEWER', 'EDITOR') NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT fk_perms_item FOREIGN KEY (item_id) REFERENCES items(id),
