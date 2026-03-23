@@ -1,0 +1,9 @@
+package com.betacom.betacom.exception;
+
+import java.util.UUID;
+
+public class UserNotFoundException extends RuntimeException {
+    public UserNotFoundException(UUID id) {
+        super("Nie znaleziono użytkownika o ID: " + id);
+    }
+}

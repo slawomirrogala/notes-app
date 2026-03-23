@@ -3,7 +3,9 @@ package com.betacom.betacom.controller;
 import com.betacom.betacom.dto.UserRegistrationDto;
 import com.betacom.betacom.dto.UserResponseDto;
 import com.betacom.betacom.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,8 +24,8 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> registerUser(@RequestBody UserRegistrationDto userRegistrationDto) {
+    public ResponseEntity<String> registerUser(@Valid @RequestBody UserRegistrationDto userRegistrationDto) {
         userService.registerUser(userRegistrationDto);
-        return ResponseEntity.ok("Konto zostało pomyślnie utworzone");
+        return ResponseEntity.status(HttpStatus.CREATED).body("Konto zostało pomyślnie utworzone");
     }
 }
