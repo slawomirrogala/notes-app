@@ -1,10 +1,10 @@
-package com.betacom.betacom.dto;
+package com.betacom.betacom.dto.user;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class LoginRequestDto {
+public class LoginRequest {
 
     @NotBlank(message = "Login jest wymagany")
     private String login;

@@ -1,8 +1,8 @@
 package com.betacom.betacom.service;
 
-import com.betacom.betacom.dto.LoginRequestDto;
-import com.betacom.betacom.dto.UserRegistrationDto;
-import com.betacom.betacom.dto.UserResponseDto;
+import com.betacom.betacom.dto.user.LoginRequest;
+import com.betacom.betacom.dto.user.UserRegistration;
+import com.betacom.betacom.dto.user.UserResponse;
 import com.betacom.betacom.entity.User;
 import com.betacom.betacom.exception.UserAlreadyExistsException;
 import com.betacom.betacom.exception.UserNotFoundException;
@@ -23,30 +23,30 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
-    public String login(LoginRequestDto loginRequestDto) {
-        User user = userRepository.findByLogin(loginRequestDto.getLogin())
+    public String login(LoginRequest loginRequest) {
+        var user = userRepository.findByLogin(loginRequest.getLogin())
                 .orElseThrow(() -> new BadCredentialsException(("Nieprawidłowy login lub hasło")));
 
-        if (!passwordEncoder.matches(loginRequestDto.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new BadCredentialsException(("Nieprawidłowy login lub hasło"));
         }
 
         return jwtService.generateToken(user.getLogin());
     }
 
-    public UserResponseDto getUserById(UUID id) {
-        User user = userRepository.findById(id)
+    public UserResponse getUserById(UUID id) {
+        var user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
-        return new UserResponseDto(user.getId(), user.getLogin(), user.getCreatedAt());
+        return new UserResponse(user.getId(), user.getLogin(), user.getCreatedAt());
     }
 
-    public void registerUser(UserRegistrationDto userRegistrationDto) {
-        if (userRepository.existsByLogin(userRegistrationDto.getLogin())) {
+    public void registerUser(UserRegistration userRegistration) {
+        if (userRepository.existsByLogin(userRegistration.getLogin())) {
             throw new UserAlreadyExistsException();
         }
-        User user = User.builder()
-                .login(userRegistrationDto.getLogin())
-                .password(passwordEncoder.encode(userRegistrationDto.getPassword()))
+        var user = User.builder()
+                .login(userRegistration.getLogin())
+                .password(passwordEncoder.encode(userRegistration.getPassword()))
                 .build();
 
         userRepository.save(user);

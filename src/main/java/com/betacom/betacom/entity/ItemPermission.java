@@ -1,6 +1,6 @@
 package com.betacom.betacom.entity;
 
-import com.betacom.betacom.entity.enums.PermissionRole;
+import com.betacom.betacom.enums.PermissionRole;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

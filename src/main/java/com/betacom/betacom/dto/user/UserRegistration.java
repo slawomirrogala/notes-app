@@ -1,11 +1,11 @@
-package com.betacom.betacom.dto;
+package com.betacom.betacom.dto.user;
 
 import lombok.Data;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 @Data
-public class UserRegistrationDto {
+public class UserRegistration {
 
     @NotBlank(message = "Login nie może być pusty")
     @Size(min = 3, max = 64, message = "Unikalny login, 3–64 znaki")

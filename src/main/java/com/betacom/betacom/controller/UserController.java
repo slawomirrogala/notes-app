@@ -1,9 +1,9 @@
 package com.betacom.betacom.controller;
 
-import com.betacom.betacom.dto.LoginRequestDto;
-import com.betacom.betacom.dto.LoginResponse;
-import com.betacom.betacom.dto.UserRegistrationDto;
-import com.betacom.betacom.dto.UserResponseDto;
+import com.betacom.betacom.dto.user.LoginRequest;
+import com.betacom.betacom.dto.user.LoginResponse;
+import com.betacom.betacom.dto.user.UserRegistration;
+import com.betacom.betacom.dto.user.UserResponse;
 import com.betacom.betacom.service.UserService;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
@@ -45,17 +45,17 @@ public class UserController {
     private int intervalSeconds;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDto loginRequestDto, HttpServletRequest request) {
-        String ip = request.getRemoteAddr();
-        Bucket bucket = buckets.computeIfAbsent(ip, k -> createNewBucket());
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletRequest request) {
+        var ip = request.getRemoteAddr();
+        var bucket = buckets.computeIfAbsent(ip, k -> createNewBucket());
 
-        ConsumptionProbe consumptionProbe = bucket.tryConsumeAndReturnRemaining(1);
+        var consumptionProbe = bucket.tryConsumeAndReturnRemaining(1);
 
         if (consumptionProbe.isConsumed()) {
-            String token = userService.login(loginRequestDto);
+            var token = userService.login(loginRequest);
             return ResponseEntity.ok(new LoginResponse( token,  expirationTime / 1000));
         } else {
-        long waitForRefillSeconds = consumptionProbe.getNanosToWaitForRefill() / 1_000_000_000;
+        var waitForRefillSeconds = consumptionProbe.getNanosToWaitForRefill() / 1_000_000_000;
         if (waitForRefillSeconds == 0) waitForRefillSeconds = 1;
 
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
@@ -66,13 +66,13 @@ public class UserController {
 
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDto> getOne(@PathVariable UUID id) {
+    public ResponseEntity<UserResponse> getOne(@PathVariable UUID id) {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> registerUser(@Valid @RequestBody UserRegistrationDto userRegistrationDto) {
-        userService.registerUser(userRegistrationDto);
+    public ResponseEntity<String> registerUser(@Valid @RequestBody UserRegistration userRegistration) {
+        userService.registerUser(userRegistration);
         return ResponseEntity.status(HttpStatus.CREATED).body("Konto zostało pomyślnie utworzone");
     }
 
