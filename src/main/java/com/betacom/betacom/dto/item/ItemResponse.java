@@ -13,6 +13,5 @@ public record ItemResponse(
         Integer version,
         UUID ownerId,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt,
-        String createdBy
+        LocalDateTime updatedAt
 ) {}

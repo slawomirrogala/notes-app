@@ -1,5 +1,6 @@
 package com.betacom.betacom.exception;
 
+import com.betacom.betacom.dto.item.VersionConflictResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -42,6 +43,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
     }
 
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<String> handleUserNotFound(UserNotFoundException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<String> handleAccessDenied(AccessDeniedException exception) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Brak dostępu do zasobu");
@@ -49,7 +55,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ItemOrUserNotFoundException.class)
     public ResponseEntity<String> handleItemNotFound(ItemOrUserNotFoundException exception) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(exception.getMessage());
     }
 
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
@@ -66,6 +72,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<String> handleIllegalArgument(IllegalArgumentException exception) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
+    }
+
+    @ExceptionHandler(VersionConflictException.class)
+    public ResponseEntity<VersionConflictResponse> handleVersionConflict(VersionConflictException exception) {
+        VersionConflictResponse versionConflictResponse = new VersionConflictResponse(
+                exception.getMessage(),
+                exception.getVersion());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(versionConflictResponse);
     }
 
 }

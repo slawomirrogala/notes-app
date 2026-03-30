@@ -42,4 +42,4 @@ Jeśli chcesz połączyć się z nią zewnętrznym narzędziem (np. HeidiSQL):
 
 ## ⚠️ Uwagi dot. wersji
 W tym projekcie zrezygnowano z adnotacji `@Version` na rzecz ręcznego zarządzania polem `version`. Gwarantuje to poprawny zapis numeru wersji w tabelach audytowych `items_aud` przy współpracy z Hibernate Envers.
-Do modelu danych została też dodana dodatkowa rola `OWNER` oraz do tabeli items dodatkowe pole `created_by` sugerujące kto dokonał zmian  
+Do modelu danych została też dodana dodatkowa rola `OWNER`

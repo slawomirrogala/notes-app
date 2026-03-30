@@ -56,7 +56,4 @@ public class Item {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-
-    @Column(name = "created_by", nullable = false, length = 64)
-    private String createdBy;
 }

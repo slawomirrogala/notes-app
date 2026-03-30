@@ -16,7 +16,6 @@ CREATE TABLE items (
     deleted BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
-    created_by VARCHAR(64) NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT fk_items_owner FOREIGN KEY (owner_id) REFERENCES users(id)
 ) ENGINE=InnoDB;

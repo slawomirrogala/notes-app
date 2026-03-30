@@ -7,6 +7,7 @@ import com.betacom.betacom.dto.item.ItemRequest;
 import com.betacom.betacom.dto.item.ItemResponse;
 import com.betacom.betacom.dto.item.ItemShareRequest;
 import com.betacom.betacom.dto.item.ItemShareResponse;
+import com.betacom.betacom.entity.CustomRevisionEntity;
 import com.betacom.betacom.entity.Item;
 import com.betacom.betacom.entity.ItemPermission;
 import com.betacom.betacom.entity.User;
@@ -15,6 +16,7 @@ import com.betacom.betacom.exception.ItemNotFoundException;
 import com.betacom.betacom.exception.ItemOrUserNotFoundException;
 import com.betacom.betacom.exception.RoleNotFoundException;
 import com.betacom.betacom.exception.UserNotFoundException;
+import com.betacom.betacom.exception.VersionConflictException;
 import com.betacom.betacom.repository.ItemPermissionRepository;
 import com.betacom.betacom.repository.ItemRepository;
 import com.betacom.betacom.repository.UserRepository;
@@ -22,10 +24,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.envers.AuditReaderFactory;
-import org.hibernate.envers.DefaultRevisionEntity;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.AccessDeniedException;
@@ -61,7 +61,6 @@ public class ItemService {
                 .ownerId(owner.getId())
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
-                .createdBy(login)
                 .build();
     }
 
@@ -83,7 +82,10 @@ public class ItemService {
 
     @Transactional
     public ItemResponse patchItem(UUID itemId, ItemPatchRequest dto, String login) throws AccessDeniedException {
-        var itemPermission = itemPermissionRepository.findByItemIdAndUserLogin(itemId, login)
+        var user = userRepository.findByLogin(login)
+                .orElseThrow(() -> new UserNotFoundException(login));
+
+        var itemPermission = itemPermissionRepository.findByItemIdAndUserId(itemId, user.getId())
                 .orElseThrow(() -> new ItemNotFoundException(itemId));
 
         if (itemPermission.getRole().equals(PermissionRole.VIEWER)) {
@@ -93,7 +95,7 @@ public class ItemService {
         var item = itemPermission.getItem();
 
         if (!item.getVersion().equals(dto.getVersion())) {
-            throw new ObjectOptimisticLockingFailureException(Item.class, itemId);
+            throw new VersionConflictException(item.getVersion());
         }
 
         if (dto.getTitle() != null) item.setTitle(dto.getTitle());
@@ -128,7 +130,7 @@ public class ItemService {
         }
 
         var targetUser = userRepository.findById(dto.userId())
-                .orElseThrow(() -> new UserNotFoundException("Użytkownik docelowy nie istnieje"));
+                .orElseThrow(() -> new UserNotFoundException(dto.userId()));
 
         if (targetUser.getLogin().equals(ownerLogin)) {
             throw new IllegalArgumentException("Nie możesz udostępnić notatki samemu sobie");
@@ -158,11 +160,8 @@ public class ItemService {
             throw new RoleNotFoundException();
         }
 
-        if(itemPermission.getItem().getDeleted().equals(true)) {
-            throw new ItemNotFoundException(itemId);
-        }
-
         var auditReader = AuditReaderFactory.get(entityManager);
+
         List<Object[]> revisions = auditReader.createQuery()
                 .forRevisionsOfEntity(Item.class, false, true)
                 .add(AuditEntity.id().eq(itemId))
@@ -170,7 +169,7 @@ public class ItemService {
 
         return revisions.stream().map(row -> {
             Item auditedItem = (Item) row[0];
-            DefaultRevisionEntity revisionEntity = (DefaultRevisionEntity) row[1];
+            CustomRevisionEntity revEntity = (CustomRevisionEntity) row[1];
             RevisionType revisionType = (RevisionType) row[2];
 
             return new ItemHistoryResponse(
@@ -178,11 +177,11 @@ public class ItemService {
                     auditedItem.getTitle(),
                     auditedItem.getContent(),
                     auditedItem.getVersion(),
-                    login,
-                    revisionEntity.getId(),
+                    revEntity.getChangedBy(),
+                    revEntity.getId(),
                     revisionType.name(),
                     LocalDateTime.ofInstant(
-                            Instant.ofEpochMilli(revisionEntity.getTimestamp()),
+                            Instant.ofEpochMilli(revEntity.getTimestamp()),
                             ZoneId.systemDefault()
                     )
             );
@@ -191,6 +190,7 @@ public class ItemService {
 
     @Transactional
     public void revokeAccess(UUID itemId, UUID targetUserId, String ownerLogin) throws AccessDeniedException {
+        validateItemExists(itemId);
         var ownerItemPermission = itemPermissionRepository.findByItemIdAndUserLogin(itemId, ownerLogin)
                 .orElseThrow(ItemOrUserNotFoundException::new);
 
@@ -203,6 +203,12 @@ public class ItemService {
         itemPermissionRepository.delete(permission);
     }
 
+    private void validateItemExists(UUID itemId) {
+        if (!itemRepository.existsById(itemId)) {
+            throw new ItemNotFoundException(itemId);
+        }
+    }
+
     private Item saveItem(ItemRequest itemRequest, User owner) {
         var item = Item.builder()
                 .title(itemRequest.getTitle())
@@ -210,7 +216,6 @@ public class ItemService {
                 .owner(owner)
                 .version(0)
                 .deleted(false)
-                .createdBy(owner.getLogin())
                 .build();
 
         return itemRepository.save(item);
@@ -234,7 +239,6 @@ public class ItemService {
                 .ownerId(item.getOwner().getId())
                 .createdAt(item.getCreatedAt())
                 .updatedAt(item.getUpdatedAt())
-                .createdBy(login)
                 .build();
     }
 }

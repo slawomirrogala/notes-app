@@ -1,7 +1,8 @@
 CREATE TABLE revinfo (
-    rev INTEGER NOT NULL AUTO_INCREMENT,
+    id INTEGER NOT NULL AUTO_INCREMENT,
     revtstmp BIGINT,
-    PRIMARY KEY (rev)
+    changed_by VARCHAR(255),
+    PRIMARY KEY (id)
 );
 
 CREATE TABLE items_aud (
@@ -15,7 +16,6 @@ CREATE TABLE items_aud (
     updated_at TIMESTAMP NOT NULL,
     created_at TIMESTAMP NOT NULL,
     deleted BOOLEAN NOT NULL DEFAULT FALSE,
-    created_by VARCHAR(64) NOT NULL,
     PRIMARY KEY (id, rev),
-    CONSTRAINT fk_items_aud_revinfo FOREIGN KEY (rev) REFERENCES revinfo (rev)
+    CONSTRAINT fk_items_aud_revinfo FOREIGN KEY (rev) REFERENCES revinfo (id)
 );
